@@ -14,6 +14,7 @@
 */
 
 include { DUMP_SOFTWARE_VERSIONS } from './modules/local/dump_software_versions.nf'
+include { LOGIC_TEST             } from './modules/local/logic_test.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -284,6 +285,18 @@ workflow{
         [[],[]]
     )
     ch_versions = ch_versions.mix(BAM_COV_RLEN.out.versions)
+
+    //
+    // ****************************
+    //
+    // SECTION: Genome masking
+    //
+    // ****************************
+    //
+
+    if(params.run_test) {
+        LOGIC_TEST()
+    }
 
     //
     // ****************************
