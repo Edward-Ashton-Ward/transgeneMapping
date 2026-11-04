@@ -294,8 +294,10 @@ workflow{
     // ****************************
     //
 
-    if(params.run_test) {
+    if( params.run_test ) {
         LOGIC_TEST()
+    } else {
+        
     }
 
     //
