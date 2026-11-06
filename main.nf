@@ -302,7 +302,7 @@ workflow{
                     .map { row ->
                         [[id: row.sample_name,refPath: row.referencePath,genomePath: row.genomePath,genomeName: row.genomeName,bamPath: row.bamPath],row.referencePath]
                     }
-                    .view{}
+                    .view()
     }
 
     //
