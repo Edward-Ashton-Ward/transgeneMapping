@@ -54,7 +54,7 @@ workflow{
     ch_inputData = Channel.fromPath(params.inputFile)
                         .splitCsv(header: true)
                         .map { row ->
-                            [[id: row.sample_name,genomePath: row.genomePath,genomeName: row.genomeName],row.bamPath]
+                            [[id: row.sample_name,refPath: row.referencePath,genomePath: row.genomePath,genomeName: row.genomeName,bamPath: row.bamPath],row.bamPath]
                         }
 
     ch_versions = Channel.empty()
@@ -296,6 +296,13 @@ workflow{
 
     if ( params.run_test ) {
         LOGIC_TEST()
+
+        ch_maskInput = channel.fromPath(params.inputFile)
+                    .splitCsv(header: true)
+                    .map { row ->
+                        [[id: row.sample_name,refPath: row.referencePath,genomePath: row.genomePath,genomeName: row.genomeName,bamPath: row.bamPath],row.referencePath]
+                    }
+                    .view{}
     }
 
     //
