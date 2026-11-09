@@ -322,14 +322,6 @@ workflow{
         ch_versions    = ch_versions.mix(MAP_REF_GENOME.out.versions)
         ch_ref_gem_bam = MAP_REF_GENOME.out.bam
     
-
-    //
-    // CHANNEL: Filter empty bams
-    //
-    ch_ref_gem_bam = ch_ref_gem_bam.filter { row -> 
-            file(row[1]).size() >= params.min_bam_size 
-            }
-
     //
     // MODULE: Convert reference mapped to genome bam file to bedgraph
     //
