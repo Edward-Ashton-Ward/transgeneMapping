@@ -33,6 +33,7 @@ include { SAMTOOLS_INDEX as SAM_INDEX_CLIP_MAP  } from './modules/nf-core/samtoo
 include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_CLIP } from './modules/nf-core/deeptools/bamcoverage/main.nf'
 include { SAMTOOLS_VIEW as SAM_VIEW_RLEN_FILTER } from './modules/nf-core/samtools/view/main.nf'
 include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN } from './modules/nf-core/deeptools/bamcoverage/main.nf'
+include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minimap2/align/main.nf'
 
 
 /*
@@ -297,12 +298,31 @@ workflow{
     if ( params.run_test ) {
         LOGIC_TEST()
 
+        //
+        // CHANNEL: Create channel for masking genome
+
         ch_maskInput = channel.fromPath(params.inputFile)
                     .splitCsv(header: true)
                     .map { row ->
                         [[id: row.sample_name,refPath: row.referencePath,genomePath: row.genomePath,genomeName: row.genomeName,bamPath: row.bamPath],row.referencePath]
                     }
                     .view()
+
+        //
+        // MODULE: Map reference file to genome
+        //
+
+        MAP_REF_GENOME(
+            ch_maskInput.map{ meta, ref -> [meta, ref] },
+            ch_maskInput.map{ meta, ref -> [meta, meta.genomePath] },
+            true,
+            false,
+            false,
+            false
+        )
+
+        ch_versions    = ch_versions.mix(MAP_REF_GENOME.out.versions)
+        ch_initial_bam = MAP_REF_GENOME.out.bam
     }
 
     //
