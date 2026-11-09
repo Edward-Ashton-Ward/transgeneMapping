@@ -374,7 +374,6 @@ workflow{
                         [meta, fa, fq]
                     }
             }
-            .view()
 
         //
         // MODULE: Map fastq file to masked genome
@@ -389,8 +388,8 @@ workflow{
             false
         )
     
-        ch_versions    = ch_versions.mix(MAP_BAM_MASK_GENOME.out.versions)
-        ch_initial_bam = MAP_BAM_MASK_GENOME.out.bam
+        ch_versions            = ch_versions.mix(MAP_BAM_MASK_GENOME.out.versions)
+        ch_all_fq_map_mask_bam = MAP_BAM_MASK_GENOME.out.bam
 
     }
 
