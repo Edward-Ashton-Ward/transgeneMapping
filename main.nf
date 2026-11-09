@@ -342,6 +342,7 @@ workflow{
         ch_ref_gen_bed.map{ meta, bed -> [meta.genomePath] }
     )
 
+    //ch_versions      = BEDTOOLS_MASKFASTA.out.versions_bedtools
     ch_masked_genome = BEDTOOLS_MASKFASTA.out.fasta
 
     }
