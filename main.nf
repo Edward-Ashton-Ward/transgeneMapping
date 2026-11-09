@@ -35,6 +35,7 @@ include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN } from './modules/nf-core/deepto
 include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minimap2/align/main.nf'
 include { BEDTOOLS_BAMTOBED                     } from './modules/nf-core/bedtools/bamtobed/main.nf'
 include { BEDTOOLS_MASKFASTA                    } from './modules/nf-core/bedtools/maskfasta/main.nf'
+include { MINIMAP2_ALIGN as MAP_BAM_MASK_GENOME } from './modules/nf-core/minimap2/align/main.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,6 +78,7 @@ workflow{
         ch_inputData.map{ meta, bam -> [meta, bam] },
         false
     )
+
     ch_versions   = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
     ch_initial_fq = SAMTOOLS_FASTQ.out.other
 
@@ -92,6 +94,7 @@ workflow{
         false,
         false
     )
+
     ch_versions    = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
     ch_initial_bam = MINIMAP2_ALIGN.out.bam
 
@@ -102,12 +105,14 @@ workflow{
     SAMTOOLS_INDEX(
         ch_initial_bam.map{ meta, bam -> [meta, bam] }
         )
+
     ch_versions    = ch_versions.mix(SAMTOOLS_INDEX.out.versions)
     ch_initial_bai = SAMTOOLS_INDEX.out.bai
 
     //
     // CHANNEL: Combine BAM and BAI
     //
+
     ch_initial_bam_bai = ch_initial_bam
         .join(ch_initial_bai, by: [0])
         .map {
@@ -120,6 +125,7 @@ workflow{
     //
     // CHANNEL: Filter empty bams
     //
+
     ch_initial_bam_bai = ch_initial_bam_bai.filter { row -> 
             file(row[1]).size() >= params.min_bam_size 
             }
@@ -134,6 +140,7 @@ workflow{
         [],
         [[],[]]
     )
+
     ch_versions = ch_versions.mix(DEEPTOOLS_BAMCOVERAGE.out.versions)
 
     //
@@ -154,6 +161,7 @@ workflow{
         [],
         'bai'
     )
+
     ch_versions    = ch_versions.mix(SAM_VIEW_CLIP_FILTER.out.versions)
     ch_clipped_bam = SAM_VIEW_CLIP_FILTER.out.bam
 
@@ -174,6 +182,7 @@ workflow{
         ch_clipped_bam.map{ meta, bam -> [meta, bam] },
         false
     )
+
     ch_versions   = ch_versions.mix(SAM_FQ_CLIP_READS.out.versions)
     ch_clipped_fq = SAM_FQ_CLIP_READS.out.other
 
@@ -189,6 +198,7 @@ workflow{
         false,
         false
     )
+
     ch_versions     = ch_versions.mix(MAP_ALIGN_GENOME.out.versions)
     ch_clip_map_bam = MAP_ALIGN_GENOME.out.bam 
 
@@ -199,12 +209,14 @@ workflow{
     SAM_INDEX_CLIP_MAP(
         ch_clip_map_bam.map{ meta, bam -> [meta, bam] }
     )
+
     ch_versions     = ch_versions.mix(SAM_INDEX_CLIP_MAP.out.versions)
     ch_clip_map_bai = SAM_INDEX_CLIP_MAP.out.bai
 
     //
     // CHANNEL: Combine BAM and BAI
     //
+
     ch_clip_map_bam_bai = ch_clip_map_bam
         .join(ch_clip_map_bai, by: [0])
         .map {
@@ -217,6 +229,7 @@ workflow{
     //
     // CHANNEL: Filter empty bams
     //
+
     ch_clip_map_bam_bai = ch_clip_map_bam_bai.filter { row -> 
             file(row[1]).size() >= params.min_bam_size 
             }
@@ -231,6 +244,7 @@ workflow{
         [],
         [[],[]]
     )
+
     ch_versions = ch_versions.mix(BAM_COV_CLIP.out.versions)
 
 
@@ -252,6 +266,7 @@ workflow{
         [],
         'bai'
     )
+
     ch_versions      = ch_versions.mix(SAM_VIEW_RLEN_FILTER.out.versions)
     ch_clip_rlen_bam = SAM_VIEW_RLEN_FILTER.out.bam
     ch_clip_rlen_bai = SAM_VIEW_RLEN_FILTER.out.bai
@@ -259,6 +274,7 @@ workflow{
     //
     // CHANNEL: Combine BAM and BAI
     //
+
     ch_clip_rlen_bam_bai = ch_clip_rlen_bam
         .join(ch_clip_rlen_bai, by: [0])
         .map {
@@ -271,6 +287,7 @@ workflow{
     //
     // CHANNEL: Filter empty bams
     //
+
     ch_clip_rlen_bam_bai = ch_clip_rlen_bam_bai.filter { row -> 
             file(row[1]).size() >= params.min_bam_size 
             }
@@ -285,6 +302,7 @@ workflow{
         [],
         [[],[]]
     )
+
     ch_versions = ch_versions.mix(BAM_COV_RLEN.out.versions)
 
     //
@@ -322,28 +340,61 @@ workflow{
         ch_versions    = ch_versions.mix(MAP_REF_GENOME.out.versions)
         ch_ref_gem_bam = MAP_REF_GENOME.out.bam
     
-    //
-    // MODULE: Convert reference mapped to genome bam file to bedgraph
-    //
+        //
+        // MODULE: Convert reference mapped to genome bam file to bedgraph
+        //
 
-    BEDTOOLS_BAMTOBED(
-        ch_ref_gem_bam.map{ meta, bam -> [meta, bam] }
-    )
+        BEDTOOLS_BAMTOBED(
+            ch_ref_gem_bam.map{ meta, bam -> [meta, bam] }
+        )
 
-    //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
-    ch_ref_gen_bed = BEDTOOLS_BAMTOBED.out.bed
+        //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
+        ch_ref_gen_bed = BEDTOOLS_BAMTOBED.out.bed
 
-    //
-    // MODULE: Mask reference genome using bed file from BAMTOBED
-    //
+        //
+        // MODULE: Mask reference genome using bed file from BAMTOBED
+        //
 
-    BEDTOOLS_MASKFASTA(
-        ch_ref_gen_bed.map{ meta, bed -> [meta, bed] },
-        ch_ref_gen_bed.map{ meta, bed -> [meta.genomePath] }
-    )
+        BEDTOOLS_MASKFASTA(
+            ch_ref_gen_bed.map{ meta, bed -> [meta, bed] },
+            ch_ref_gen_bed.map{ meta, bed -> [meta.genomePath] }
+        )
 
-    //ch_versions      = BEDTOOLS_MASKFASTA.out.versions_bedtools
-    ch_masked_genome = BEDTOOLS_MASKFASTA.out.fasta
+        //ch_versions    = BEDTOOLS_MASKFASTA.out.versions_bedtools
+        ch_masked_genome = BEDTOOLS_MASKFASTA.out.fasta
+
+        //
+        // CHANNEL: Merge masked genome channel with initial fastq channel
+
+        ch_masked_genome_fq = ch_masked_genome
+            .join(ch_initial_fq, by: [0])
+            .map {
+                meta, fq, fa ->
+                    if (fa) {
+                        [meta, fq, fa]
+                    }
+            }
+            .view()
+
+        /*
+
+        //
+        // MODULE: Map fastq file to masked genome
+        //
+
+        MAP_BAM_MASK_GENOME(
+            ch_masked_genome.map{ meta, fq -> [meta, meta.bamPath] },
+            ch_masked_genome.map{ meta, fa -> [meta, fa] },
+            true,
+            false,
+            false,
+            false
+        )
+    
+        ch_versions    = ch_versions.mix(MAP_BAM_MASK_GENOME.out.versions)
+        ch_initial_bam = MAP_BAM_MASK_GENOME.out.bam
+
+        */
 
     }
 
