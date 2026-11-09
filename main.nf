@@ -333,8 +333,6 @@ workflow{
     //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
     ch_ref_gen_bed = BEDTOOLS_BAMTOBED.out.bed
 
-    ch_ref_gen_bed.view()
-
     //
     // MODULE: Mask reference genome using bed file from BAMTOBED
     //
