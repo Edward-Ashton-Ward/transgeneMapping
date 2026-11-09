@@ -15,6 +15,7 @@
 
 include { DUMP_SOFTWARE_VERSIONS } from './modules/local/dump_software_versions.nf'
 
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT NF-CORE MODULES
@@ -37,6 +38,7 @@ include { BEDTOOLS_BAMTOBED                      } from './modules/nf-core/bedto
 include { BEDTOOLS_MASKFASTA                     } from './modules/nf-core/bedtools/maskfasta/main.nf'
 include { MINIMAP2_ALIGN as MAP_BAM_MASK_GENOME  } from './modules/nf-core/minimap2/align/main.nf'
 include { MINIMAP2_ALIGN as MAP_FILT_MASK_GENOME } from './modules/nf-core/minimap2/align/main.nf'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -433,11 +435,13 @@ workflow{
     //
     // MODULE: Collect software versions
     //
+
     DUMP_SOFTWARE_VERSIONS (
         ch_versions.unique().collectFile()
     )
 
 }
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
