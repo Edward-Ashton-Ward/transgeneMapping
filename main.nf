@@ -338,7 +338,7 @@ workflow{
         ch_ref_gem_bam.map{ meta, bam -> [meta, bam] }
     )
 
-    ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
+    //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
     ch_ref_gem_bed = BEDTOOLS_BAMTOBED.out.bed
 
     //
