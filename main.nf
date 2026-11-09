@@ -36,7 +36,6 @@ include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minima
 include { BEDTOOLS_BAMTOBED                     } from './modules/nf-core/bedtools/bamtobed/main.nf'
 include { BEDTOOLS_MASKFASTA                    } from './modules/nf-core/bedtools/maskfasta/main.nf'
 
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -341,6 +340,17 @@ workflow{
 
     //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
     ch_ref_gem_bed = BEDTOOLS_BAMTOBED.out.bed
+
+    //
+    // MODULE: Mask reference genome using bed file from BAMTOBED
+    //
+
+    BEDTOOLS_MASKFASTA(
+        ch_ref_gem_bed.map{ meta, bed -> [meta, bed] }
+        ch_ref_gem_bed.map{ meta, bed -> meta.referencePath }
+    )
+
+    ch_masked_genome = BEDTOOLS_MASKFASTA.out.fasta
 
     }
 
