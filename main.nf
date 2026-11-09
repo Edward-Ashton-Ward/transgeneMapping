@@ -14,7 +14,6 @@
 */
 
 include { DUMP_SOFTWARE_VERSIONS } from './modules/local/dump_software_versions.nf'
-include { LOGIC_TEST             } from './modules/local/logic_test.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,6 +33,7 @@ include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_CLIP } from './modules/nf-core/deepto
 include { SAMTOOLS_VIEW as SAM_VIEW_RLEN_FILTER } from './modules/nf-core/samtools/view/main.nf'
 include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN } from './modules/nf-core/deeptools/bamcoverage/main.nf'
 include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minimap2/align/main.nf'
+include { BEDTOOLS_BAMTOBED                     } from './modules/nf-core/bedtools/bamtobed/main.nf'
 
 
 /*
@@ -296,7 +296,6 @@ workflow{
     //
 
     if ( params.run_test ) {
-        LOGIC_TEST()
 
         //
         // CHANNEL: Create channel for masking genome
@@ -321,8 +320,26 @@ workflow{
         )
 
         ch_versions    = ch_versions.mix(MAP_REF_GENOME.out.versions)
-        ch_initial_bam = MAP_REF_GENOME.out.bam
+        ch_ref_gem_bam = MAP_REF_GENOME.out.bam
     }
+
+    //
+    // CHANNEL: Filter empty bams
+    //
+    ch_ref_gem_bam = ch_ref_gem_bam.filter { row -> 
+            file(row[1]).size() >= params.min_bam_size 
+            }
+
+    //
+    // MODULE: Convert reference mapped to genome bam file to bedgraph
+    //
+
+    BEDTOOLS_BAMTOBED(
+        ch_ref_gem_bam.map{ meta, bam -> [meta, bam] }
+    )
+
+    ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions)
+    ch_ref_gem_bed = BEDTOOLS_BAMTOBED.out.bed
 
     //
     // ****************************
