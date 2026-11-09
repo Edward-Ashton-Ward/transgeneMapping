@@ -339,7 +339,7 @@ workflow{
 
     BEDTOOLS_MASKFASTA(
         ch_ref_gen_bed.map{ meta, bed -> [meta, bed] },
-        ch_ref_gen_bed.map{ meta, bed -> meta.referencePath }
+        ch_ref_gen_bed.map{ meta, bed -> [meta.genomePath] }
     )
 
     ch_masked_genome = BEDTOOLS_MASKFASTA.out.fasta
