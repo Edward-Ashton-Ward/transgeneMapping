@@ -34,6 +34,7 @@ include { SAMTOOLS_VIEW as SAM_VIEW_RLEN_FILTER } from './modules/nf-core/samtoo
 include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN } from './modules/nf-core/deeptools/bamcoverage/main.nf'
 include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minimap2/align/main.nf'
 include { BEDTOOLS_BAMTOBED                     } from './modules/nf-core/bedtools/bamtobed/main.nf'
+include { BEDTOOLS_MASKFASTA                    } from './modules/nf-core/bedtools/maskfasta/main.nf'
 
 
 /*
@@ -321,7 +322,7 @@ workflow{
 
         ch_versions    = ch_versions.mix(MAP_REF_GENOME.out.versions)
         ch_ref_gem_bam = MAP_REF_GENOME.out.bam
-    }
+    
 
     //
     // CHANNEL: Filter empty bams
@@ -340,6 +341,8 @@ workflow{
 
     //ch_versions    = ch_versions.mix(BEDTOOLS_BAMTOBED.out.versions_bedtools)
     ch_ref_gem_bed = BEDTOOLS_BAMTOBED.out.bed
+
+    }
 
     //
     // ****************************
