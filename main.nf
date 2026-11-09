@@ -369,22 +369,20 @@ workflow{
         ch_masked_genome_fq = ch_masked_genome
             .join(ch_initial_fq, by: [0])
             .map {
-                meta, fq, fa ->
-                    if (fa) {
-                        [meta, fq, fa]
+                meta, fa, fq ->
+                    if (fq) {
+                        [meta, fa, fq]
                     }
             }
             .view()
-
-        /*
 
         //
         // MODULE: Map fastq file to masked genome
         //
 
         MAP_BAM_MASK_GENOME(
-            ch_masked_genome.map{ meta, fq -> [meta, meta.bamPath] },
-            ch_masked_genome.map{ meta, fa -> [meta, fa] },
+            ch_masked_genome_fq.map{ meta, fa, fq -> [meta, fq] },
+            ch_masked_genome_fq.map{ meta, fa, fq -> [meta, fa] },
             true,
             false,
             false,
@@ -393,8 +391,6 @@ workflow{
     
         ch_versions    = ch_versions.mix(MAP_BAM_MASK_GENOME.out.versions)
         ch_initial_bam = MAP_BAM_MASK_GENOME.out.bam
-
-        */
 
     }
 
