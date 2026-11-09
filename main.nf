@@ -21,21 +21,22 @@ include { DUMP_SOFTWARE_VERSIONS } from './modules/local/dump_software_versions.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SAMTOOLS_FASTQ                        } from './modules/nf-core/samtools/fastq/main.nf'
-include { MINIMAP2_ALIGN                        } from './modules/nf-core/minimap2/align/main.nf'
-include { SAMTOOLS_INDEX                        } from './modules/nf-core/samtools/index/main.nf'
-include { DEEPTOOLS_BAMCOVERAGE                 } from './modules/nf-core/deeptools/bamcoverage/main.nf'
-include { SAMTOOLS_VIEW as SAM_VIEW_CLIP_FILTER } from './modules/nf-core/samtools/view/main.nf'
-include { SAMTOOLS_FASTQ as SAM_FQ_CLIP_READS   } from './modules/nf-core/samtools/fastq/main.nf'
-include { MINIMAP2_ALIGN as MAP_ALIGN_GENOME    } from './modules/nf-core/minimap2/align/main.nf'
-include { SAMTOOLS_INDEX as SAM_INDEX_CLIP_MAP  } from './modules/nf-core/samtools/index/main.nf'
-include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_CLIP } from './modules/nf-core/deeptools/bamcoverage/main.nf'
-include { SAMTOOLS_VIEW as SAM_VIEW_RLEN_FILTER } from './modules/nf-core/samtools/view/main.nf'
-include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN } from './modules/nf-core/deeptools/bamcoverage/main.nf'
-include { MINIMAP2_ALIGN as MAP_REF_GENOME      } from './modules/nf-core/minimap2/align/main.nf'
-include { BEDTOOLS_BAMTOBED                     } from './modules/nf-core/bedtools/bamtobed/main.nf'
-include { BEDTOOLS_MASKFASTA                    } from './modules/nf-core/bedtools/maskfasta/main.nf'
-include { MINIMAP2_ALIGN as MAP_BAM_MASK_GENOME } from './modules/nf-core/minimap2/align/main.nf'
+include { SAMTOOLS_FASTQ                         } from './modules/nf-core/samtools/fastq/main.nf'
+include { MINIMAP2_ALIGN                         } from './modules/nf-core/minimap2/align/main.nf'
+include { SAMTOOLS_INDEX                         } from './modules/nf-core/samtools/index/main.nf'
+include { DEEPTOOLS_BAMCOVERAGE                  } from './modules/nf-core/deeptools/bamcoverage/main.nf'
+include { SAMTOOLS_VIEW as SAM_VIEW_CLIP_FILTER  } from './modules/nf-core/samtools/view/main.nf'
+include { SAMTOOLS_FASTQ as SAM_FQ_CLIP_READS    } from './modules/nf-core/samtools/fastq/main.nf'
+include { MINIMAP2_ALIGN as MAP_ALIGN_GENOME     } from './modules/nf-core/minimap2/align/main.nf'
+include { SAMTOOLS_INDEX as SAM_INDEX_CLIP_MAP   } from './modules/nf-core/samtools/index/main.nf'
+include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_CLIP  } from './modules/nf-core/deeptools/bamcoverage/main.nf'
+include { SAMTOOLS_VIEW as SAM_VIEW_RLEN_FILTER  } from './modules/nf-core/samtools/view/main.nf'
+include { DEEPTOOLS_BAMCOVERAGE as BAM_COV_RLEN  } from './modules/nf-core/deeptools/bamcoverage/main.nf'
+include { MINIMAP2_ALIGN as MAP_REF_GENOME       } from './modules/nf-core/minimap2/align/main.nf'
+include { BEDTOOLS_BAMTOBED                      } from './modules/nf-core/bedtools/bamtobed/main.nf'
+include { BEDTOOLS_MASKFASTA                     } from './modules/nf-core/bedtools/maskfasta/main.nf'
+include { MINIMAP2_ALIGN as MAP_BAM_MASK_GENOME  } from './modules/nf-core/minimap2/align/main.nf'
+include { MINIMAP2_ALIGN as MAP_FILT_MASK_GENOME } from './modules/nf-core/minimap2/align/main.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -391,6 +392,34 @@ workflow{
         ch_versions            = ch_versions.mix(MAP_BAM_MASK_GENOME.out.versions)
         ch_all_fq_map_mask_bam = MAP_BAM_MASK_GENOME.out.bam
 
+        //
+        // CHANNEL: Merge masked genome channel with filtered fastq channel
+        //
+
+        ch_mask_filt_fq = ch_masked_genome
+            .join(ch_clipped_fq, by: [0])
+            .map {
+                meta, fa, fq ->
+                    if (fq) {
+                        [meta, fa, fq]
+                    }
+            }
+
+        //
+        // MODULE: Map clipped reads to masked genome
+        //
+
+        MAP_FILT_MASK_GENOME(
+            ch_mask_filt_fq.map{ meta, fa, fq -> [meta, fq] },
+            ch_mask_filt_fq.map{ meta, fa, fq -> [meta, fa] },
+            true,
+            false,
+            false,
+            false
+        )
+    
+        ch_versions            = ch_versions.mix(MAP_FILT_MASK_GENOME.out.versions)
+        ch_filt_fq_map_mask_bam = MAP_FILT_MASK_GENOME.out.bam
     }
 
     //
