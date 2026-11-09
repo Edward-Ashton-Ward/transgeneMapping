@@ -340,7 +340,7 @@ workflow{
     //
 
     BEDTOOLS_MASKFASTA(
-        ch_ref_gen_bed.map{ meta, bed -> [meta, bed] }
+        ch_ref_gen_bed.map{ meta, bed -> [meta, bed] },
         ch_ref_gen_bed.map{ meta, bed -> meta.referencePath }
     )
 
